@@ -32,8 +32,17 @@ async function getProfiles(){
     return profiles;
 }
 
+async function getInventory(userId){
+    let { data: inventory, error } = await supabase
+    .from('inventory')
+    .select('*')
+    .eq('user_id', userId)
+    return inventory;
+}
+
 module.exports = {
     login,
     getProfile,
-    getProfiles
+    getProfiles,
+    getInventory
 }

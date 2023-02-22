@@ -5,7 +5,7 @@ const cors = require('cors');
 const express = require('express');
 
 const SECRET = process.env.SECRET;
-const PORT = 3000;
+const PORT = 443;
 
 const app = express();
 
@@ -60,6 +60,14 @@ app.get('/profile', verifyJWT, async (req, res) => {
 // tavern
 app.get('/tavern', (req, res) => {
     users.getProfiles().then((response) => {
+        res.send(response);
+    })
+})
+
+// inventory
+app.get('/inventory', verifyJWT, async (req, res) => {
+    const id = req.id;
+    users.getInventory(id).then((response) => {
         res.send(response);
     })
 })
