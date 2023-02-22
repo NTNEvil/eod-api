@@ -5,7 +5,7 @@ const cors = require('cors');
 const express = require('express');
 
 const SECRET = process.env.SECRET;
-const PORT = 443;
+const PORT = 3000;
 
 const app = express();
 
