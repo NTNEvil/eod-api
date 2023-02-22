@@ -5,6 +5,7 @@ const cors = require('cors');
 const express = require('express');
 
 const SECRET = process.env.SECRET;
+const PORT = 3000;
 
 const app = express();
 
@@ -29,6 +30,7 @@ function verifyJWT(req, res, next) {
     });
 }
 
+// USERS
 // login
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -45,9 +47,20 @@ app.post('/login', async (req, res) => {
     });
 });
 
+// get profile
+app.get('/profile', verifyJWT, async (req, res) => {
+    const id = req.id;
+    users.getProfile(id).then((response) => {
+        res.send(response);
+    })
+});
+
+// ROUTES
 // get default
 app.get('/', (req, res) => {
     res.send('Working!');
 })
 
-app.listen(3000);
+app.listen(PORT, () => {
+    console.log(`Server listener on port: ${PORT}`);
+});

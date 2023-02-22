@@ -13,6 +13,19 @@ async function login(user) {
     }
 }
 
+async function getProfile(userId){
+    let { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', userId)
+    if (profiles.length == 1) {
+        return profiles[0];
+    } else {
+        return null;
+    }
+}
+
 module.exports = {
-    login: login
+    login,
+    getProfile
 }
