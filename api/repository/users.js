@@ -25,7 +25,15 @@ async function getProfile(userId){
     }
 }
 
+async function getProfiles(){
+    let { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('*')
+    return profiles;
+}
+
 module.exports = {
     login,
-    getProfile
+    getProfile,
+    getProfiles
 }

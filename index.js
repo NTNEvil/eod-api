@@ -30,6 +30,8 @@ function verifyJWT(req, res, next) {
     });
 }
 
+// ROUTES
+
 // USERS
 // login
 app.post('/login', async (req, res) => {
@@ -55,7 +57,13 @@ app.get('/profile', verifyJWT, async (req, res) => {
     })
 });
 
-// ROUTES
+// tavern
+app.get('/tavern', (req, res) => {
+    users.getProfiles().then((response) => {
+        res.send(response);
+    })
+})
+
 // get default
 app.get('/', (req, res) => {
     res.send('Working!');
