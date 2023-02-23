@@ -1,5 +1,5 @@
 require('dotenv').config();
-const users = require('./api/repository/users');
+const db = require('./api/repository/database');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const express = require('express');
@@ -37,7 +37,7 @@ function verifyJWT(req, res, next) {
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const user = { username, password };
-    users.login(user).then((response) => {
+    db.login(user).then((response) => {
         if (response != null) {
             const token = jwt.sign({ id: response.id }, SECRET, { expiresIn: "7d" });
             return res.json({ auth: true, token: token });
@@ -52,23 +52,35 @@ app.post('/login', async (req, res) => {
 // get profile
 app.get('/profile', verifyJWT, async (req, res) => {
     const id = req.id;
-    users.getProfile(id).then((response) => {
+    db.getProfile(id).then((response) => {
         res.send(response);
     })
 });
 
 // tavern
 app.get('/tavern', (req, res) => {
-    users.getProfiles().then((response) => {
+    db.getProfiles().then((response) => {
         res.send(response);
     })
 })
 
+// ITEMS
 // inventory
 app.get('/inventory', verifyJWT, async (req, res) => {
     const id = req.id;
-    users.getInventory(id).then((response) => {
+    db.getInventory(id).then((response) => {
         res.send(response);
+    })
+})
+
+// buy item
+app.post('/store/:itemid/buy', verifyJWT, (req, res) => {
+    const id = req.id;
+    const item_id = req.params.itemid;
+    db.buyItem(id, item_id).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        res.status(error.status).json({ error: error.message });
     })
 })
 

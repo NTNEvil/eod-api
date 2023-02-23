@@ -1,4 +1,5 @@
 const supabase = require('./conn');
+const createError = require('http-errors');
 
 async function login(user) {
     let { data: users, error } = await supabase
@@ -56,9 +57,40 @@ async function getInventory(userId) {
     return result;
 }
 
+async function buyItem(userId, storeId){
+    let { data: profiles, error1 } = await supabase
+        .from('profiles')
+        .select('money')
+        .eq('user_id', userId)
+    if (profiles[0] == undefined) throw createError(404, 'User not found');
+    const money = profiles[0].money;
+    
+    let { data: store, error2 } = await supabase
+        .from('store')
+        .select('*')
+        .eq('id', storeId)
+    const itemstore = store[0];
+    if (itemstore == undefined) throw createError(404, 'Item not found in store');
+    const balance = money - itemstore.price;
+    if (balance < 0) throw createError(403, 'Insufficient funds');
+    
+    const { data2, error3 } = await supabase
+        .from('profiles')
+        .update({ money: balance })
+        .eq('user_id', userId)
+
+    const { data3, error } = await supabase
+        .from('inventory')
+        .insert([
+          { item_id: itemstore.item_id, user_id: userId },
+        ])
+    return {'msg': 'Purchase made successfully'};
+}
+
 module.exports = {
     login,
     getProfile,
     getProfiles,
-    getInventory
+    getInventory,
+    buyItem
 }
