@@ -87,10 +87,35 @@ async function buyItem(userId, storeId){
     return {'msg': 'Purchase made successfully'};
 }
 
+async function getMoney(userId){
+    let { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('money')
+        .eq('user_id', userId)
+    if (profiles[0] == undefined) throw createError(404, 'User not found');
+    const money = profiles[0].money;
+    // gold
+    const gold = Math.floor(money/1000);
+    const restGold = money % 1000;
+    // silver
+    const silver = Math.floor(restGold/100);
+    const restSilver = restGold % 100;
+    // bronze
+    const bronze = restSilver;
+    // result
+    const result = {};
+    result.gold = gold;
+    result.silver = silver;
+    result.bronze = bronze;
+    
+    return result;
+}
+
 module.exports = {
     login,
     getProfile,
     getProfiles,
     getInventory,
-    buyItem
+    buyItem,
+    getMoney
 }
