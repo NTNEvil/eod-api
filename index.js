@@ -103,6 +103,17 @@ app.post('/store/:itemid/buy', verifyJWT, async (req, res) => {
     })
 })
 
+// roulette
+app.post('/roulette', verifyJWT, async (req, res) => {
+    const id = req.id;
+    const itemId = req.body.item_id;
+    db.roulette(id, itemId).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        res.status(error.status).json({ error: error.message });
+    })
+})
+
 // get default
 app.get('/', (req, res) => {
     res.send('Working!');

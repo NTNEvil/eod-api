@@ -136,6 +136,21 @@ async function getMoney(userId){
     return result;
 }
 
+async function roulette(userId, itemId){
+    const { data: items, error1 } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', itemId);
+    if (items[0] == undefined) throw createError(404, 'Item not found');
+
+    const { data2, error2 } = await supabase
+        .from('inventory')
+        .insert([
+          { item_id: itemId, user_id: userId },
+        ])
+    return {'msg': 'Item adicionado ao inventario!'};
+}
+
 module.exports = {
     login,
     getProfile,
@@ -143,5 +158,6 @@ module.exports = {
     getInventory,
     buyItem,
     getMoney,
-    getStore
+    getStore,
+    roulette
 }
