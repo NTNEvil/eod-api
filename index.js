@@ -83,8 +83,17 @@ app.get('/inventory', verifyJWT, async (req, res) => {
     })
 })
 
+// STORE
+app.get('/store', async (req, res) => {
+    db.getStore().then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        res.status(error.status).json({ error: error.message });
+    })
+})
+
 // buy item
-app.post('/store/:itemid/buy', verifyJWT, (req, res) => {
+app.post('/store/:itemid/buy', verifyJWT, async (req, res) => {
     const id = req.id;
     const item_id = req.params.itemid;
     db.buyItem(id, item_id).then((response) => {

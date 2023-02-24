@@ -57,6 +57,29 @@ async function getInventory(userId) {
     return result;
 }
 
+async function getStore(){
+    let result = [];
+    let { data: store, error1 } = await supabase
+        .from('store')
+        .select('*')
+    
+    for (let i = 0; i < store.length; i++){
+        let { data: item, error2 } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', store[i].item_id)
+        
+        let model = {};
+        model.id = store[i].id;
+        model.name = item[0].name;
+        model.price = store[i].price;
+        model.description = item[0].description;
+        model.img = item[0].img;
+        result.push(model);
+    }
+    return result;
+}
+
 async function buyItem(userId, storeId){
     let { data: profiles, error1 } = await supabase
         .from('profiles')
@@ -117,5 +140,6 @@ module.exports = {
     getProfiles,
     getInventory,
     buyItem,
-    getMoney
+    getMoney,
+    getStore
 }
