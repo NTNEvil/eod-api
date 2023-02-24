@@ -51,6 +51,8 @@ async function getInventory(userId) {
         let modelitem = {}
         modelitem.id = inventory[i].id;
         modelitem.name = item[0].name;
+        modelitem.description = item[0].description;
+        modelitem.img = item[0].img;
         result.push(modelitem);
     }
 
