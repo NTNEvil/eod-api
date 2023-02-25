@@ -53,6 +53,7 @@ async function getInventory(userId) {
         modelitem.name = item[0].name;
         modelitem.description = item[0].description;
         modelitem.img = item[0].img;
+        modelitem.consumable = item[0].consumable;
         result.push(modelitem);
     }
 
