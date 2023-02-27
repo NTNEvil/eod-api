@@ -33,6 +33,15 @@ async function getProfiles() {
     return profiles;
 }
 
+async function getStatus(userId){
+    let { data: status, error } = await supabase
+        .from('status')
+        .select('*')
+        .eq('user_id', userId);
+    if (status[0] == undefined) throw createError(404, 'User not found');
+    return status[0];
+}
+
 async function getInventory(userId) {
 
     let result = [];
@@ -156,6 +165,7 @@ module.exports = {
     login,
     getProfile,
     getProfiles,
+    getStatus,
     getInventory,
     buyItem,
     getMoney,

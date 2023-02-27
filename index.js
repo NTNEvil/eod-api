@@ -67,6 +67,16 @@ app.get('/profile/money', verifyJWT, async (req, res) => {
     })
 });
 
+// get status user
+app.get('/profile/status', verifyJWT, async (req, res) => {
+    const id = req.id;
+    db.getStatus(id).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        res.status(error.status).json({ error: error.message });
+    })
+});
+
 // tavern
 app.get('/tavern', (req, res) => {
     db.getProfiles().then((response) => {
