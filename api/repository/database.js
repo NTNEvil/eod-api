@@ -1,6 +1,8 @@
 const supabase = require('./conn');
 const createError = require('http-errors');
 
+const attNames = ['str', 'dex', 'cons', 'wis', 'int', 'charm', 'luck'];
+
 async function login(user) {
     let { data: users, error } = await supabase
         .from('users')
@@ -40,6 +42,21 @@ async function getStatus(userId){
         .eq('user_id', userId);
     if (status[0] == undefined) throw createError(404, 'User not found');
     return status[0];
+}
+
+async function addStatus(userId, att) {
+    const status = await getStatus(userId);
+
+    if (!attNames.includes(att)) throw createError(404, 'Attribute does not exist');
+    
+    if (status.free_point <= 0) throw createError(403, 'Insufficient points');
+
+    console.log({ free_point: status.free_point-1, [att]:status[att]+1});
+    const { data, error } = await supabase
+        .from('status')
+        .update({ free_point: status.free_point-1, [att]:status[att]+1})
+        .eq('id', status.id);
+    return true;
 }
 
 async function getInventory(userId) {
@@ -166,6 +183,7 @@ module.exports = {
     getProfile,
     getProfiles,
     getStatus,
+    addStatus,
     getInventory,
     buyItem,
     getMoney,

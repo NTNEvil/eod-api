@@ -77,6 +77,17 @@ app.get('/profile/status', verifyJWT, async (req, res) => {
     })
 });
 
+// add status
+app.post('/profile/status/:att/add', verifyJWT, async (req, res) => {
+    const id = req.id;
+    const att = req.params.att;
+    db.addStatus(id, att).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        res.status(error.status).json({ error: error.message });
+    });
+});
+
 // tavern
 app.get('/tavern', (req, res) => {
     db.getProfiles().then((response) => {
