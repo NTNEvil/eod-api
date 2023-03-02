@@ -2,6 +2,7 @@ const supabase = require('./conn');
 const createError = require('http-errors');
 
 const attNames = ['str', 'dex', 'cons', 'wis', 'int', 'charm', 'luck'];
+const races = ['Humano', 'Dragonborn', 'Tiefling', 'Fada', 'Anão', 'Elfo', 'Orc'];
 
 async function login(user) {
     let { data: users, error } = await supabase
@@ -178,6 +179,97 @@ async function roulette(userId, itemId){
     return {'msg': 'Item adicionado ao inventario!'};
 }
 
+// TCT
+function calculateAddXp(lvInit, xpInit, xpAdd, freePointInit) {
+    let lv = lvInit;
+    let xp = parseInt(xpInit) + parseInt(xpAdd);
+    let maxXp = lv * 100;
+    let freePoint = freePointInit;
+    let leveledUp = 0;
+    while (xp >= maxXp) {
+        xp -= maxXp;
+        lv++;
+        leveledUp++;
+        freePoint += 5;
+        maxXp = lv * 100;
+    }
+    return { lv: lv, xp: xp, free_point: freePoint, leveledUp: leveledUp };
+}
+
+function lvUp(race, status) {
+    if (!races.includes(race)) throw createError(400, 'Race invalid!');
+    switch (race) {
+        case 'Humano':
+            status.str++;
+            status.dex++;
+            status.cons++;
+            status.wis++;
+            status.int++;
+            break;
+        case 'Dragonborn':
+            status.str += 2;
+            status.cons++;
+            break;
+        case 'Tiefling':
+            status.dex += 2;
+            status.wis++;
+            status.int++;
+            break;
+        case 'Fada':
+            status.str--;
+            status.dex += 3;
+            status.cons--;
+            status.wis += 2;
+            status.int += 2;
+            break;
+        case 'Anão':
+            status.str += 2;
+            status.cons += 2;
+            break;
+        case 'Elfo':
+            status.dex += 2;
+            status.wis += 2;
+            status.int++;
+            break;
+        case 'Orc':
+            status.str += 3;
+            status.cons += 2;
+            status.int--;
+            break;
+        default:
+            break;
+    }
+    return status;
+}
+
+async function tct(userId, value) {
+    if (isNaN(value)) throw createError(400, 'Invalid value');
+    value/=10;
+    let status = await getStatus(userId);
+    const result = calculateAddXp(status.lv, status.xp, value, status.free_point);
+    console.log(result);
+
+    let { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId);
+    const race = profile[0].race;
+
+    for (let i = 0; i < result.leveledUp; i++) {
+        status = lvUp(race, status);
+    }
+
+    status.xp = result.xp;
+    status.lv = result.lv;
+    status.free_point = result.free_point;
+
+    await supabase
+        .from('status')
+        .update(status)
+        .eq('id', status.id);
+    return {'msg': 'O tct foi registrado!'};
+}
+
 module.exports = {
     login,
     getProfile,
@@ -188,5 +280,6 @@ module.exports = {
     buyItem,
     getMoney,
     getStore,
-    roulette
+    roulette,
+    tct
 }

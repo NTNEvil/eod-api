@@ -133,7 +133,18 @@ app.post('/roulette', verifyJWT, async (req, res) => {
     }).catch((error) => {
         res.status(error.status).json({ error: error.message });
     })
-})
+});
+
+app.post('/tct', verifyJWT, async (req, res) => {
+    const id = req.id;
+    const tctPoints = req.body.points;
+    db.tct(id, tctPoints).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        console.log(error);
+        res.status(error.status).json({error: error.message});
+    })
+});
 
 // get default
 app.get('/', (req, res) => {
