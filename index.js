@@ -67,6 +67,17 @@ app.get('/profile/money', verifyJWT, async (req, res) => {
     })
 });
 
+// add money
+app.post('/profile/money/add', verifyJWT, async (req, res) => {
+    const id = req.id;
+    const value = req.body.money;
+    db.addMoney(id, value).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        res.status(error.status).json({ error: error.message });
+    })
+});
+
 // get status user
 app.get('/profile/status', verifyJWT, async (req, res) => {
     const id = req.id;

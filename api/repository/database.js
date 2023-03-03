@@ -164,6 +164,22 @@ async function getMoney(userId){
     return result;
 }
 
+async function addMoney(userId, value) {
+    let { data: profiles } = await supabase
+        .from('profiles')
+        .select('money')
+        .eq('user_id', userId)
+    if (profiles[0] == undefined) throw createError(404, 'User not found');
+    if (isNaN(parseInt(value))) throw createError(400, 'Value invalid');
+    const newMoney = profiles[0].money + parseInt(value);
+    
+    await supabase
+        .from('profiles')
+        .update({money: newMoney})
+        .eq('user_id', userId);
+    return {'msg': 'Money added successfully'};
+}
+
 async function roulette(userId, itemId){
     const { data: items, error1 } = await supabase
         .from('items')
@@ -279,6 +295,7 @@ module.exports = {
     getInventory,
     buyItem,
     getMoney,
+    addMoney,
     getStore,
     roulette,
     tct
