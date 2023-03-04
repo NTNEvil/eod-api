@@ -88,6 +88,17 @@ app.get('/profile/status', verifyJWT, async (req, res) => {
     })
 });
 
+app.post('/profile/status/hp', verifyJWT, async (req, res) => {
+    const id = req.id;
+    const hp = req.body.hp;
+    db.hp(id, hp).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        console.log(error);
+        res.status(error.status).json({error: error.message});
+    })
+});
+
 // add status
 app.post('/profile/status/:att/add', verifyJWT, async (req, res) => {
     const id = req.id;

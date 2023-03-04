@@ -286,6 +286,19 @@ async function tct(userId, value) {
     return {'msg': 'O tct foi registrado!'};
 }
 
+async function hp(userId, value){
+    if (isNaN(value)) throw createError(400, 'Invalid value');
+    value = parseInt(value);
+    let status = await getStatus(userId);
+    status.hp = (status.hp + value);
+
+    await supabase
+        .from('status')
+        .update(status)
+        .eq('id', status.id);
+    return {'msg': 'O status foi atualizado!'};
+}
+
 module.exports = {
     login,
     getProfile,
@@ -298,5 +311,6 @@ module.exports = {
     addMoney,
     getStore,
     roulette,
-    tct
+    tct,
+    hp
 }
