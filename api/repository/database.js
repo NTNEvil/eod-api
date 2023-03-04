@@ -66,7 +66,7 @@ async function getInventory(userId) {
 
     let { data: inventory, error1 } = await supabase
         .from('inventory')
-        .select('id, item_id')
+        .select('*')
         .eq('user_id', userId)
 
     for (let i = 0; i < inventory.length; i++) {
@@ -81,10 +81,84 @@ async function getInventory(userId) {
         modelitem.description = item[0].description;
         modelitem.img = item[0].img;
         modelitem.consumable = item[0].consumable;
+        modelitem.equipped = inventory[i].equipped;
         result.push(modelitem);
     }
 
     return result;
+}
+
+async function getItem(itemId){
+    if (isNaN(itemId)) throw createError(400, 'Value invalid');
+    let { data: items } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', itemId)
+    if (items[0] == undefined) throw createError(404, 'Item not found');
+    return items[0]
+}
+
+async function dbSetEquippedItem(status, invItem, slot){
+    // mark old item unequipped
+    if (status[slot] != null){
+        await supabase
+            .from('inventory')
+            .update({ equipped: false})
+            .eq('id', status[slot]);
+    }
+
+    // mark equipped
+    invItem.equipped = true;
+    await supabase
+        .from('inventory')
+        .update(invItem)
+        .eq('id', invItem.id);
+
+    // set to status
+    status[slot] = invItem.id;
+    await supabase
+        .from('status')
+        .update(status)
+        .eq('id', status.id);
+}
+
+async function equipItem(userId, invId) {
+    // checker 
+    if (invId == null) throw createError(404, 'Inventory id invalid');
+
+    // get status
+    const status = await getStatus(userId);
+    
+    // get inv item
+    let { data: invItems } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('id', invId)
+        .eq('user_id', userId)
+    if (invItems[0] == undefined) throw createError(404, 'Item not found');
+    const invItem = invItems[0];
+
+    const itemData = await getItem(invItem.item_id);
+
+    // weapon
+    switch (itemData.type) {
+        case 'weapon':
+            await dbSetEquippedItem(status, invItem, 'weapon');
+            break;
+
+        case 'armor':
+            await dbSetEquippedItem(status, invItem, 'armor');
+            break;
+
+        case 'shield':
+            await dbSetEquippedItem(status, invItem, 'shield');
+            break;
+    
+        default:
+            throw createError(400, 'This item cannot be equipped');
+    }
+
+    return { 'msg': 'The item has been equipped'};
 }
 
 async function getStore(){
@@ -306,6 +380,7 @@ module.exports = {
     getStatus,
     addStatus,
     getInventory,
+    equipItem,
     buyItem,
     getMoney,
     addMoney,
