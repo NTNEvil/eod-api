@@ -161,6 +161,39 @@ async function equipItem(userId, invId) {
     return { 'msg': 'The item has been equipped'};
 }
 
+async function unequipItem(userId, invId) {
+    // checker 
+    if (invId == null) throw createError(404, 'Inventory id invalid');
+
+    // get status
+    const status = await getStatus(userId);
+
+    // get inv item
+    let { data: invItems } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('id', invId)
+        .eq('user_id', userId)
+    if (invItems[0] == undefined) throw createError(404, 'Item not found');
+    const invItem = invItems[0];
+
+    const itemData = await getItem(invItem.item_id);
+
+    // mark unequip
+    invItem.equipped = false;
+    await supabase
+        .from('inventory')
+        .update(invItem)
+        .eq('id', invItem.id);
+    
+    // set player status to null
+    status[itemData.type] = null;
+    await supabase
+        .from('status')
+        .update(status)
+        .eq('id', status.id);
+}
+
 async function getStore(){
     let result = [];
     let { data: store, error1 } = await supabase
@@ -381,6 +414,7 @@ module.exports = {
     addStatus,
     getInventory,
     equipItem,
+    unequipItem,
     buyItem,
     getMoney,
     addMoney,

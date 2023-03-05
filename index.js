@@ -9,7 +9,7 @@ const PORT = 3000;
 
 const app = express();
 
-app.use(express.json())
+app.use(express.json());
 
 // cors
 app.use((req, res, next) => {
@@ -54,7 +54,7 @@ app.get('/profile', verifyJWT, async (req, res) => {
     const id = req.id;
     db.getProfile(id).then((response) => {
         res.send(response);
-    })
+    });
 });
 
 // get money user
@@ -64,7 +64,7 @@ app.get('/profile/money', verifyJWT, async (req, res) => {
         res.send(response);
     }).catch((error) => {
         res.status(error.status).json({ error: error.message });
-    })
+    });
 });
 
 // add money
@@ -75,7 +75,7 @@ app.post('/profile/money/add', verifyJWT, async (req, res) => {
         res.send(response);
     }).catch((error) => {
         res.status(error.status).json({ error: error.message });
-    })
+    });
 });
 
 // get status user
@@ -85,7 +85,7 @@ app.get('/profile/status', verifyJWT, async (req, res) => {
         res.send(response);
     }).catch((error) => {
         res.status(error.status).json({ error: error.message });
-    })
+    });
 });
 
 app.post('/profile/status/hp', verifyJWT, async (req, res) => {
@@ -96,7 +96,7 @@ app.post('/profile/status/hp', verifyJWT, async (req, res) => {
     }).catch((error) => {
         console.log(error);
         res.status(error.status).json({error: error.message});
-    })
+    });
 });
 
 // add status
@@ -114,8 +114,8 @@ app.post('/profile/status/:att/add', verifyJWT, async (req, res) => {
 app.get('/tavern', (req, res) => {
     db.getProfiles().then((response) => {
         res.send(response);
-    })
-})
+    });
+});
 
 // ITEMS
 // inventory
@@ -123,8 +123,8 @@ app.get('/inventory', verifyJWT, async (req, res) => {
     const id = req.id;
     db.getInventory(id).then((response) => {
         res.send(response);
-    })
-})
+    });
+});
 
 // equip item
 app.post('/inventory/equip/', verifyJWT, async (req, res) => {
@@ -138,14 +138,26 @@ app.post('/inventory/equip/', verifyJWT, async (req, res) => {
     });
 });
 
+// unequip item
+app.post('/inventory/unequip/', verifyJWT, async (req, res) => {
+    const id = req.id;
+    const invId = req.body.inv_id;
+    db.unequipItem(id, invId).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        console.log(error);
+        res.status(error.status).json({error: error.message});
+    });
+});
+
 // STORE
 app.get('/store', async (req, res) => {
     db.getStore().then((response) => {
         res.send(response);
     }).catch((error) => {
         res.status(error.status).json({ error: error.message });
-    })
-})
+    });
+});
 
 // buy item
 app.post('/store/:itemid/buy', verifyJWT, async (req, res) => {
@@ -155,8 +167,8 @@ app.post('/store/:itemid/buy', verifyJWT, async (req, res) => {
         res.send(response);
     }).catch((error) => {
         res.status(error.status).json({ error: error.message });
-    })
-})
+    });
+});
 
 // roulette
 app.post('/roulette', verifyJWT, async (req, res) => {
@@ -166,7 +178,7 @@ app.post('/roulette', verifyJWT, async (req, res) => {
         res.send(response);
     }).catch((error) => {
         res.status(error.status).json({ error: error.message });
-    })
+    });
 });
 
 app.post('/tct', verifyJWT, async (req, res) => {
@@ -177,13 +189,13 @@ app.post('/tct', verifyJWT, async (req, res) => {
     }).catch((error) => {
         console.log(error);
         res.status(error.status).json({error: error.message});
-    })
+    });
 });
 
 // get default
 app.get('/', (req, res) => {
     res.send('Working!');
-})
+});
 
 app.listen(PORT, () => {
     console.log(`Server listener on port: ${PORT}`);
