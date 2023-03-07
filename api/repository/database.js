@@ -43,12 +43,20 @@ async function getStatus(userId){
         .eq('user_id', userId);
     if (status[0] == undefined) throw createError(404, 'User not found');
     const statusData = status[0];
-    statusData.damage = 10+statusData.str;
-    if (statusData.weapon != null) {
-        const item = await getInvItem(userId, statusData.weapon);
-        statusData.damage += item.value1;
-    }
     return statusData;
+}
+
+async function getStatusShow(userId) {
+    const status = await getStatus(userId);
+    status.max_xp = status.lv*100;
+    status.max_hp = 100+(status.cons*10);
+    status.max_mp = 100+(status.int*10);
+    status.damage = 10+status.str;
+    if (status.weapon != null) {
+        const item = await getInvItem(userId, status.weapon);
+        status.damage += item.value1;
+    }
+    return status;
 }
 
 async function addStatus(userId, att) {
@@ -455,7 +463,7 @@ module.exports = {
     login,
     getProfile,
     getProfiles,
-    getStatus,
+    getStatusShow,
     addStatus,
     getInventory,
     getInvItemShow,

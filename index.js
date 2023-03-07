@@ -81,9 +81,10 @@ app.post('/profile/money/add', verifyJWT, async (req, res) => {
 // get status user
 app.get('/profile/status', verifyJWT, async (req, res) => {
     const id = req.id;
-    db.getStatus(id).then((response) => {
+    db.getStatusShow(id).then((response) => {
         res.send(response);
     }).catch((error) => {
+        console.log(error);
         res.status(error.status).json({ error: error.message });
     });
 });
