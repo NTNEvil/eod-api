@@ -126,6 +126,18 @@ app.get('/inventory', verifyJWT, async (req, res) => {
     });
 });
 
+// inventory item
+app.get('/inventory/:invId', verifyJWT, async (req, res) => {
+    const id = req.id;
+    const invId = req.params.invId;
+    db.getInvItemShow(id, invId).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        console.log(error);
+        res.status(error.status).json({error: error.message});
+    });
+});
+
 // equip item
 app.post('/inventory/equip/', verifyJWT, async (req, res) => {
     const id = req.id;

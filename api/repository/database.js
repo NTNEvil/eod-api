@@ -118,6 +118,22 @@ async function getInvItem(userId, invId){
     return itemData;
 }
 
+async function getInvItemShow(userId, invId){
+    // get inv item
+    let { data: invItems } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('id', invId)
+        .eq('user_id', userId)
+    if (invItems[0] == undefined) throw createError(404, 'Item not found');
+    const invItem = invItems[0];
+
+    const itemData = await getItem(invItem.item_id);
+    result = invItem;
+    result.data = itemData;
+    return result;
+}
+
 async function dbSetEquippedItem(status, invItem, slot){
     // mark old item unequipped
     if (status[slot] != null){
@@ -442,6 +458,7 @@ module.exports = {
     getStatus,
     addStatus,
     getInventory,
+    getInvItemShow,
     equipItem,
     unequipItem,
     buyItem,
