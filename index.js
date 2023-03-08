@@ -163,6 +163,18 @@ app.post('/inventory/unequip/', verifyJWT, async (req, res) => {
     });
 });
 
+// use item
+app.post('/inventory/:id/use/', verifyJWT, async (req, res) => {
+    const id = req.id;
+    const invId = req.params.id;
+    db.useItem(id, invId).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        console.log(error);
+        res.status(error.status).json({error: error.message});
+    });
+});
+
 // STORE
 app.get('/store', async (req, res) => {
     db.getStore().then((response) => {

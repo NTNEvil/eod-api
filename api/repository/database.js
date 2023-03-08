@@ -36,7 +36,7 @@ async function getProfiles() {
     return profiles;
 }
 
-async function getStatus(userId){
+async function getStatus(userId) {
     let { data: status, error } = await supabase
         .from('status')
         .select('*')
@@ -48,10 +48,10 @@ async function getStatus(userId){
 
 async function getStatusShow(userId) {
     const status = await getStatus(userId);
-    status.max_xp = status.lv*100;
-    status.max_hp = 100+(status.cons*10);
-    status.max_mp = 100+(status.int*10);
-    status.damage = 10+status.str;
+    status.max_xp = status.lv * 100;
+    status.max_hp = 100 + (status.cons * 10);
+    status.max_mp = 100 + (status.int * 10);
+    status.damage = 10 + status.str;
     if (status.weapon != null) {
         const item = await getInvItem(userId, status.weapon);
         status.damage += item.value1;
@@ -63,13 +63,13 @@ async function addStatus(userId, att) {
     const status = await getStatus(userId);
 
     if (!attNames.includes(att)) throw createError(404, 'Attribute does not exist');
-    
+
     if (status.free_point <= 0) throw createError(403, 'Insufficient points');
 
-    console.log({ free_point: status.free_point-1, [att]:status[att]+1});
+    console.log({ free_point: status.free_point - 1, [att]: status[att] + 1 });
     const { data, error } = await supabase
         .from('status')
-        .update({ free_point: status.free_point-1, [att]:status[att]+1})
+        .update({ free_point: status.free_point - 1, [att]: status[att] + 1 })
         .eq('id', status.id);
     return true;
 }
@@ -84,10 +84,10 @@ async function getInventory(userId) {
         .eq('user_id', userId)
 
     for (let i = 0; i < inventory.length; i++) {
-        let { data:item, error2 } = await supabase
-        .from('items')
-        .select('*')
-        .eq('id', inventory[i].item_id)
+        let { data: item, error2 } = await supabase
+            .from('items')
+            .select('*')
+            .eq('id', inventory[i].item_id)
 
         let modelitem = {}
         modelitem.id = inventory[i].id;
@@ -102,7 +102,7 @@ async function getInventory(userId) {
     return result;
 }
 
-async function getItem(itemId){
+async function getItem(itemId) {
     if (isNaN(itemId)) throw createError(400, 'Value invalid');
     let { data: items } = await supabase
         .from('items')
@@ -112,7 +112,7 @@ async function getItem(itemId){
     return items[0]
 }
 
-async function getInvItem(userId, invId){
+async function getInvItem(userId, invId) {
     // get inv item
     let { data: invItems } = await supabase
         .from('inventory')
@@ -126,7 +126,7 @@ async function getInvItem(userId, invId){
     return itemData;
 }
 
-async function getInvItemShow(userId, invId){
+async function getInvItemShow(userId, invId) {
     // get inv item
     let { data: invItems } = await supabase
         .from('inventory')
@@ -142,12 +142,12 @@ async function getInvItemShow(userId, invId){
     return result;
 }
 
-async function dbSetEquippedItem(status, invItem, slot){
+async function dbSetEquippedItem(status, invItem, slot) {
     // mark old item unequipped
-    if (status[slot] != null){
+    if (status[slot] != null) {
         await supabase
             .from('inventory')
-            .update({ equipped: false})
+            .update({ equipped: false })
             .eq('id', status[slot]);
     }
 
@@ -172,7 +172,7 @@ async function equipItem(userId, invId) {
 
     // get status
     const status = await getStatus(userId);
-    
+
     // get inv item
     let { data: invItems } = await supabase
         .from('inventory')
@@ -197,12 +197,12 @@ async function equipItem(userId, invId) {
         case 'shield':
             await dbSetEquippedItem(status, invItem, 'shield');
             break;
-    
+
         default:
             throw createError(400, 'This item cannot be equipped');
     }
 
-    return { 'msg': 'The item has been equipped'};
+    return { 'msg': 'The item has been equipped' };
 }
 
 async function unequipItem(userId, invId) {
@@ -229,28 +229,99 @@ async function unequipItem(userId, invId) {
         .from('inventory')
         .update(invItem)
         .eq('id', invItem.id);
-    
+
     // set player status to null
     status[itemData.type] = null;
     await supabase
         .from('status')
         .update(status)
         .eq('id', status.id);
-    return { 'msg': 'Item unequipped'}
+    return { 'msg': 'Item unequipped' }
 }
 
-async function getStore(){
+async function useItem(userId, invId) {
+    // checker 
+    if (invId == null) throw createError(404, 'Inventory id invalid');
+
+    // get status
+    const status = await getStatus(userId);
+
+    // get inv item
+    let { data: invItems } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('id', invId)
+        .eq('user_id', userId)
+    if (invItems[0] == undefined) throw createError(404, 'Item not found');
+    const invItem = invItems[0];
+
+    const itemData = await getItem(invItem.item_id);
+    if (itemData.consumable == false) throw createError(400, 'This item cannot be used');
+
+    switch (itemData.type) {
+        case 'potionHp':
+            // reg hp
+            const maxHp = (status.cons*10)+100;
+            if (status.hp >= maxHp) throw createError(400, 'Your hp is already full');
+
+            const resultHp = status.hp + itemData.value1;
+            if (resultHp > maxHp) {
+                status.hp = maxHp;
+            } else {
+                status.hp = resultHp;
+            }
+
+            // update database
+            await supabase
+                .from('status')
+                .update(status)
+                .eq('id', status.id);
+            break;
+
+        case 'potionMana':
+            // reg mana
+            const maxMp = (status.int*10)+100;
+            if (status.mp >= maxMp) throw createError(400, 'Your mp is already full');
+
+            const resultMp = status.mp + itemData.value1;
+            if (resultMp > maxMp) {
+                status.mp = maxMp;
+            } else {
+                status.mp = resultMp;
+            }
+            
+            // update database
+            await supabase
+                .from('status')
+                .update(status)
+                .eq('id', status.id);
+            break;
+
+        default:
+            throw createError(400, 'This item cannot be used');
+    }
+
+    // remove used item
+    await supabase
+        .from('inventory')
+        .delete()
+        .eq('id', invItem.id);
+
+    return { 'msg': 'Item successfully used' };
+}
+
+async function getStore() {
     let result = [];
     let { data: store, error1 } = await supabase
         .from('store')
         .select('*')
-    
-    for (let i = 0; i < store.length; i++){
+
+    for (let i = 0; i < store.length; i++) {
         let { data: item, error2 } = await supabase
-        .from('items')
-        .select('*')
-        .eq('id', store[i].item_id)
-        
+            .from('items')
+            .select('*')
+            .eq('id', store[i].item_id)
+
         let model = {};
         model.id = store[i].id;
         model.name = item[0].name;
@@ -262,14 +333,14 @@ async function getStore(){
     return result;
 }
 
-async function buyItem(userId, storeId){
+async function buyItem(userId, storeId) {
     let { data: profiles, error1 } = await supabase
         .from('profiles')
         .select('money')
         .eq('user_id', userId)
     if (profiles[0] == undefined) throw createError(404, 'User not found');
     const money = profiles[0].money;
-    
+
     let { data: store, error2 } = await supabase
         .from('store')
         .select('*')
@@ -278,7 +349,7 @@ async function buyItem(userId, storeId){
     if (itemstore == undefined) throw createError(404, 'Item not found in store');
     const balance = money - itemstore.price;
     if (balance < 0) throw createError(403, 'Insufficient funds');
-    
+
     const { data2, error3 } = await supabase
         .from('profiles')
         .update({ money: balance })
@@ -287,12 +358,12 @@ async function buyItem(userId, storeId){
     const { data3, error } = await supabase
         .from('inventory')
         .insert([
-          { item_id: itemstore.item_id, user_id: userId },
+            { item_id: itemstore.item_id, user_id: userId },
         ])
-    return {'msg': 'Purchase made successfully'};
+    return { 'msg': 'Purchase made successfully' };
 }
 
-async function getMoney(userId){
+async function getMoney(userId) {
     let { data: profiles, error } = await supabase
         .from('profiles')
         .select('money')
@@ -300,10 +371,10 @@ async function getMoney(userId){
     if (profiles[0] == undefined) throw createError(404, 'User not found');
     const money = profiles[0].money;
     // gold
-    const gold = Math.floor(money/1000);
+    const gold = Math.floor(money / 1000);
     const restGold = money % 1000;
     // silver
-    const silver = Math.floor(restGold/100);
+    const silver = Math.floor(restGold / 100);
     const restSilver = restGold % 100;
     // bronze
     const bronze = restSilver;
@@ -312,7 +383,7 @@ async function getMoney(userId){
     result.gold = gold;
     result.silver = silver;
     result.bronze = bronze;
-    
+
     return result;
 }
 
@@ -324,15 +395,15 @@ async function addMoney(userId, value) {
     if (profiles[0] == undefined) throw createError(404, 'User not found');
     if (isNaN(parseInt(value))) throw createError(400, 'Value invalid');
     const newMoney = profiles[0].money + parseInt(value);
-    
+
     await supabase
         .from('profiles')
-        .update({money: newMoney})
+        .update({ money: newMoney })
         .eq('user_id', userId);
-    return {'msg': 'Money added successfully'};
+    return { 'msg': 'Money added successfully' };
 }
 
-async function roulette(userId, itemId){
+async function roulette(userId, itemId) {
     const { data: items, error1 } = await supabase
         .from('items')
         .select('*')
@@ -342,9 +413,9 @@ async function roulette(userId, itemId){
     const { data2, error2 } = await supabase
         .from('inventory')
         .insert([
-          { item_id: itemId, user_id: userId },
+            { item_id: itemId, user_id: userId },
         ])
-    return {'msg': 'Item adicionado ao inventario!'};
+    return { 'msg': 'Item adicionado ao inventario!' };
 }
 
 // TCT
@@ -412,7 +483,7 @@ function lvUp(race, status) {
 
 async function tct(userId, value) {
     if (isNaN(value)) throw createError(400, 'Invalid value');
-    value/=10;
+    value /= 10;
     let status = await getStatus(userId);
     const result = calculateAddXp(status.lv, status.xp, value, status.free_point);
     console.log(result);
@@ -440,13 +511,13 @@ async function tct(userId, value) {
     await supabase
         .from('logs')
         .insert([
-          { text: `USER: ${userId} POINTS: ${value}` },
+            { text: `USER: ${userId} POINTS: ${value}` },
         ]);
-    
-    return {'msg': 'O tct foi registrado!'};
+
+    return { 'msg': 'O tct foi registrado!' };
 }
 
-async function hp(userId, value){
+async function hp(userId, value) {
     if (isNaN(value)) throw createError(400, 'Invalid value');
     value = parseInt(value);
     let status = await getStatus(userId);
@@ -456,7 +527,7 @@ async function hp(userId, value){
         .from('status')
         .update(status)
         .eq('id', status.id);
-    return {'msg': 'O status foi atualizado!'};
+    return { 'msg': 'O status foi atualizado!' };
 }
 
 module.exports = {
@@ -469,6 +540,7 @@ module.exports = {
     getInvItemShow,
     equipItem,
     unequipItem,
+    useItem,
     buyItem,
     getMoney,
     addMoney,
