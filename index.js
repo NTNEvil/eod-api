@@ -100,6 +100,18 @@ app.post('/profile/status/hp', verifyJWT, async (req, res) => {
     });
 });
 
+// take damage
+app.post('/profile/status/takedamage', verifyJWT, async (req, res) => {
+    const id = req.id;
+    const damage = req.body.damage;
+    db.takeDamage(id, damage).then((response) => {
+        res.send(response);
+    }).catch((error) => {
+        console.log(error);
+        res.status(error.status).json({error: error.message});
+    });
+});
+
 // add status
 app.post('/profile/status/:att/add', verifyJWT, async (req, res) => {
     const id = req.id;

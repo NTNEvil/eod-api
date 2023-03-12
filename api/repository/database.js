@@ -261,7 +261,7 @@ async function useItem(userId, invId) {
     switch (itemData.type) {
         case 'potionHp':
             // reg hp
-            const maxHp = (status.cons*10)+100;
+            const maxHp = (status.cons * 10) + 100;
             if (status.hp >= maxHp) throw createError(400, 'Your hp is already full');
 
             const resultHp = status.hp + itemData.value1;
@@ -280,7 +280,7 @@ async function useItem(userId, invId) {
 
         case 'potionMana':
             // reg mana
-            const maxMp = (status.int*10)+100;
+            const maxMp = (status.int * 10) + 100;
             if (status.mp >= maxMp) throw createError(400, 'Your mp is already full');
 
             const resultMp = status.mp + itemData.value1;
@@ -289,7 +289,7 @@ async function useItem(userId, invId) {
             } else {
                 status.mp = resultMp;
             }
-            
+
             // update database
             await supabase
                 .from('status')
@@ -521,6 +521,8 @@ async function hp(userId, value) {
     if (isNaN(value)) throw createError(400, 'Invalid value');
     value = parseInt(value);
     let status = await getStatus(userId);
+
+    // set new hp
     status.hp = (status.hp + value);
 
     await supabase
@@ -528,6 +530,34 @@ async function hp(userId, value) {
         .update(status)
         .eq('id', status.id);
     return { 'msg': 'O status foi atualizado!' };
+}
+
+async function takeDamage(userId, damage) {
+    if (isNaN(damage)) throw createError(400, 'Invalid value');
+    damage = parseInt(damage);
+
+    // get status
+    const status = await getStatus(userId);
+
+    // set armor reduction
+    if (status.armor != null) {
+        console.log('Armour detect');
+        const itemArmor = await getInvItem(status.user_id, status.armor);
+        const reductionDamage = (itemArmor.value1 / 100) * damage;
+        damage -= reductionDamage;
+    }
+    console.log(`Damage: ${damage}`);
+
+    // new hp
+    status.hp -= damage;
+
+    // update database
+    await supabase
+        .from('status')
+        .update({ hp: status.hp })
+        .eq('id', status.id);
+
+    return { msg: 'O status foi atualizado!', damage: damage };
 }
 
 module.exports = {
@@ -547,5 +577,6 @@ module.exports = {
     getStore,
     roulette,
     tct,
-    hp
+    hp,
+    takeDamage
 }
