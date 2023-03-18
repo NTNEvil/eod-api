@@ -483,7 +483,7 @@ function lvUp(race, status) {
 
 async function tct(userId, value) {
     if (isNaN(value)) throw createError(400, 'Invalid value');
-    value /= 5;
+    value /= 10;
     let status = await getStatus(userId);
     const result = calculateAddXp(status.lv, status.xp, value, status.free_point);
     console.log(result);
