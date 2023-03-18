@@ -1,5 +1,6 @@
 const supabase = require('./conn');
 const createError = require('http-errors');
+const logs = require('./logs');
 
 const attNames = ['str', 'dex', 'cons', 'wis', 'int', 'charm', 'luck'];
 const races = ['Humano', 'Dragonborn', 'Tiefling', 'Fada', 'Anão', 'Elfo', 'Orc'];
@@ -400,6 +401,10 @@ async function addMoney(userId, value) {
         .from('profiles')
         .update({ money: newMoney })
         .eq('user_id', userId);
+
+    // logs
+    await logs.create(`Ganhou ${value} Money`, 'api-money', userId);
+
     return { 'msg': 'Money added successfully' };
 }
 
@@ -415,6 +420,10 @@ async function roulette(userId, itemId) {
         .insert([
             { item_id: itemId, user_id: userId },
         ])
+
+    // logs
+    await logs.create(`Ganhou ItemID: ${itemId}`, 'api-roulette', userId);
+    
     return { 'msg': 'Item adicionado ao inventario!' };
 }
 
@@ -508,11 +517,7 @@ async function tct(userId, value) {
         .eq('id', status.id);
 
     // logs
-    await supabase
-        .from('logs')
-        .insert([
-            { text: `USER: ${userId} POINTS: ${value}` },
-        ]);
+    await logs.create(`Ganhou ${value} XP`, 'api-tct', userId);
 
     return { 'msg': 'O tct foi registrado!' };
 }
@@ -529,6 +534,10 @@ async function hp(userId, value) {
         .from('status')
         .update(status)
         .eq('id', status.id);
+
+    // logs
+    await logs.create(`Ganhou ${value} HP`, 'api-hp', userId);
+    
     return { 'msg': 'O status foi atualizado!' };
 }
 
@@ -556,6 +565,9 @@ async function takeDamage(userId, damage) {
         .from('status')
         .update({ hp: status.hp })
         .eq('id', status.id);
+
+    // logs
+    await logs.create(`Recebeu ${damage} dano`, 'api-damage', userId);
 
     return { msg: 'O status foi atualizado!', damage: damage };
 }
